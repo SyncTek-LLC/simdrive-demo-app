@@ -51,6 +51,14 @@ struct SignInView: View {
     }
 
     private func signInTapped() {
+        // BUG (bug/empty-password-crash):
+        // The validator used to short-circuit on empty password, but a careless
+        // "let's grab the first character for analytics" refactor force-unwraps
+        // password.first BEFORE we hand off to SignInValidator. When the user
+        // taps Sign In with an empty password we crash with EXC_BAD_INSTRUCTION.
+        // Fixed on main — see git log.
+        let _ = password.first!  // 💥 crash on empty password
+
         let result = SignInValidator.validate(email: email, password: password)
         switch result {
         case .success(let email):
